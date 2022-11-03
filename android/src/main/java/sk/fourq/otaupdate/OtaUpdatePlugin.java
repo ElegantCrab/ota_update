@@ -354,6 +354,7 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCall
         //     intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         //             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         // } else {
+            Log.d("Configurating intent on path >> "+path);
             Uri fileUri = Uri.parse(path);
             intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(fileUri, "application/vnd.android.package-archive");
@@ -365,11 +366,12 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCall
             //NOTE: We have to start intent before sending event to stream
             //if application tries to programatically terminate app it may produce race condition
             //and application may end before intent is dispatched
-            context.startActivity(intent);
             progressSink.success(Arrays.asList("" + OtaStatus.INSTALLING.ordinal(), ""));
             progressSink.endOfStream();
             progressSink = null;
         }
+        Log.d("Executing installation");
+        context.startActivity(intent);
 
         return true;
     }
