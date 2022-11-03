@@ -16,6 +16,12 @@ import android.util.Log;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+
+import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
+import io.flutter.plugin.common.MethodChannel.Result;
+
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -44,7 +50,7 @@ import java.util.Map;
  * OtaUpdatePlugin
  */
 @TargetApi(Build.VERSION_CODES.M)
-public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, EventChannel.StreamHandler, PluginRegistry.RequestPermissionsResultListener, ProgressListener {
+public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCallHandler, EventChannel.StreamHandler, PluginRegistry.RequestPermissionsResultListener, ProgressListener {
 
     //CONSTANTS
     private static final String BYTES_DOWNLOADED = "BYTES_DOWNLOADED";
@@ -66,6 +72,7 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, EventChann
     private String androidProviderAuthority;
     private BinaryMessenger messanger;
     private OkHttpClient client;
+    private MethodChannel methodChannel;
 
     //DOWNLOAD SPECIFIC PLUGIN STATE. PLUGIN SUPPORT ONLY ONE DOWNLOAD AT A TIME
     private String downloadUrl;
@@ -90,6 +97,8 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, EventChann
     @Override
     public void onAttachedToEngine(FlutterPluginBinding binding) {
         Log.d(TAG, "onAttachedToEngine");
+        methodChannel = new MethodChannel(binding.getBinaryMessenger(), "sk.fourq.ota_update.method");
+        methodChannel.setMethodCallHandler(this);
         initialize(binding.getApplicationContext(), binding.getBinaryMessenger());
     }
 
@@ -104,6 +113,16 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, EventChann
         Log.d(TAG, "onAttachedToActivity");
         activityPluginBinding.addRequestPermissionsResultListener(this);
         activity = activityPluginBinding.getActivity();
+    }
+
+    @Override
+    public void onMethodCall(MethodCall call, Result result) {
+      if (call.method.equals("executeInstallation")) {
+        String filePath = call.argument("filePath");
+        result.success(executeInstall(filePath));
+      } else {
+        result.notImplemented();
+      }
     }
 
     @Override
@@ -323,6 +342,36 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, EventChann
             progressSink.endOfStream();
             progressSink = null;
         }
+    }
+
+    public boolean executeInstall(String path) {
+        Intent intent;
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        //     //AUTHORITY NEEDS TO BE THE SAME ALSO IN MANIFEST
+        //     Uri apkUri = FileProvider.getUriForFile(context, androidProviderAuthority, downloadedFile);
+        //     intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
+        //     intent.setData(apkUri);
+        //     intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        //             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        // } else {
+            Uri fileUri = Uri.parse(path);
+            intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(fileUri, "application/vnd.android.package-archive");
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        // }
+
+        //SEND INSTALLING EVENT
+        if (progressSink != null) {
+            //NOTE: We have to start intent before sending event to stream
+            //if application tries to programatically terminate app it may produce race condition
+            //and application may end before intent is dispatched
+            context.startActivity(intent);
+            progressSink.success(Arrays.asList("" + OtaStatus.INSTALLING.ordinal(), ""));
+            progressSink.endOfStream();
+            progressSink = null;
+        }
+
+        return true;
     }
 
     /**

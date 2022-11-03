@@ -11,6 +11,8 @@ class OtaUpdate {
       EventChannel('sk.fourq.ota_update');
   Stream<OtaEvent>? _progressStream;
 
+  static const MethodChannel _methodChannel = MethodChannel('sk.fourq.ota_update.method');
+
   /// Execute download and instalation of the plugin.
   /// Download progress and all success or error states are publish in stream as OtaEvent
   Stream<OtaEvent> execute(
@@ -48,6 +50,14 @@ class OtaUpdate {
       _progressStream = controller.stream;
     }
     return _progressStream!;
+  }
+
+  /// Executes installation only if the file has already been downloaded
+  /// Returns false if the file doesn't exist, true if it exists
+  Future<bool?> executeInstallation(String filePath) async {
+    return await _methodChannel.invokeMethod<bool>('executeInstallation', <String, String>{
+      'filePath': filePath
+    });
   }
 
   OtaEvent _toOtaEvent(List<String?> event) {
