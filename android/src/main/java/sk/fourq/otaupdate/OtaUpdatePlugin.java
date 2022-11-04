@@ -348,6 +348,10 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCall
     public boolean executeInstall(String path) {
         Intent intent;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            String dataDir = context.getApplicationInfo().dataDir + "/files/ota_update";
+            //PREPARE URLS
+            final String destination = dataDir + "/" + filename;
+            // final Uri fileUri = Uri.parse("file://" + destination);
             final File downloadedFile = new File(destination);
             if (!downloadedFile.exists()) {
                 Log.e(TAG, "CRITICAL: File does not exist");
