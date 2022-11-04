@@ -219,7 +219,8 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCall
             //PREPARE URLS
             final String destination = dataDir + "/" + filename;
             final Uri fileUri = Uri.parse("file://" + destination);
-
+            
+            Log.d(TAG, destination);
             //DELETE APK FILE IF IT ALREADY EXISTS
             final File file = new File(destination);
             if (file.exists()) {
@@ -346,20 +347,24 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCall
 
     public boolean executeInstall(String path) {
         Intent intent;
-        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        //     //AUTHORITY NEEDS TO BE THE SAME ALSO IN MANIFEST
-        //     Uri apkUri = FileProvider.getUriForFile(context, androidProviderAuthority, downloadedFile);
-        //     intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
-        //     intent.setData(apkUri);
-        //     intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        //             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        // } else {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            final File downloadedFile = new File(destination);
+            if (!file.exists()) {
+                Log.e(TAG, "CRITICAL: File does not exist");
+            }
+            //AUTHORITY NEEDS TO BE THE SAME ALSO IN MANIFEST
+            Uri apkUri = FileProvider.getUriForFile(context, androidProviderAuthority, downloadedFile);
+            intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
+            intent.setData(apkUri);
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        } else {
             Log.d(TAG,"Configurating intent on path >> "+path);
             Uri fileUri = Uri.parse(path);
             intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(fileUri, "application/vnd.android.package-archive");
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        // }
+        }
 
         //SEND INSTALLING EVENT
         if (progressSink != null) {
