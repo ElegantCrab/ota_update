@@ -228,7 +228,7 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCall
                 if (!file.delete()) {
                     Log.e(TAG, "WARNING: unable to delete old apk file before starting OTA");
                 }
-            } else {
+            } else if (!file.getParentFile().exists()){
                 if (!file.getParentFile().mkdirs()) {
                     reportError(OtaStatus.INTERNAL_ERROR, "unable to create ota_update folder in internal storage", null);
                 }
@@ -257,9 +257,14 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCall
                     if (!response.isSuccessful()) {
                         reportError(OtaStatus.DOWNLOAD_ERROR, "Http request finished with status " + response.code(), null);
                     }
-                    BufferedSink sink = Okio.buffer(Okio.sink(file));
-                    sink.writeAll(response.body().source());
-                    sink.close();
+                    try {
+                        BufferedSink sink = Okio.buffer(Okio.sink(file));
+                        sink.writeAll(response.body().source());
+                        sink.close();
+                    } catch (RuntimeException ex){
+                        reportError(OtaStatus.DOWNLOAD_ERROR, ex.getMessage(), ex);
+                        return;
+                    }
                     onDownloadComplete(destination, fileUri);
                 }
             });
