@@ -354,7 +354,7 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCall
         //     intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         //             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         // } else {
-            Log.d("Configurating intent on path >> "+path);
+            Log.d(TAG,"Configurating intent on path >> "+path);
             Uri fileUri = Uri.parse(path);
             intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(fileUri, "application/vnd.android.package-archive");
@@ -370,7 +370,7 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCall
             progressSink.endOfStream();
             progressSink = null;
         }
-        Log.d("Executing installation");
+        Log.d(TAG, "Executing installation");
         context.startActivity(intent);
 
         return true;
