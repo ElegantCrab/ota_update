@@ -119,7 +119,8 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCall
     public void onMethodCall(MethodCall call, Result result) {
       if (call.method.equals("executeInstallation")) {
         String filePath = call.argument("filePath");
-        result.success(executeInstall(filePath));
+        String actualFileName = call.argument("actualFileName");
+        result.success(executeInstall(filePat,actualFileName));
       } else {
         result.notImplemented();
       }
