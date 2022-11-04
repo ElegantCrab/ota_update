@@ -349,7 +349,7 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCall
         Intent intent;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             final File downloadedFile = new File(destination);
-            if (!file.exists()) {
+            if (!downloadedFile.exists()) {
                 Log.e(TAG, "CRITICAL: File does not exist");
             }
             //AUTHORITY NEEDS TO BE THE SAME ALSO IN MANIFEST
