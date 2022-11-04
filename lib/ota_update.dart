@@ -53,10 +53,23 @@ class OtaUpdate {
   }
 
   /// Executes installation only if the file has already been downloaded
-  /// Returns false if the file doesn't exist, true if it exists
+  /// Returns false if the file doesn't exist or filepath is empty, true if it exists
   Future<bool?> executeInstallation(String filePath) async {
+    String newFilePath = filePath;
+    if(newFilePath.isEmpty) {
+      return false; 
+    }
+    if(filePath.startsWith('/')) {
+      newFilePath = newFilePath.substring(1); 
+    }
+    if(filePath.endsWith('/')) {
+      newFilePath = newFilePath.substring(0, newFilePath.length-1);
+    }
+    if(!filePath.startsWith('file://')) {
+      newFilePath = 'file://$newFilePath';
+    }
     return await _methodChannel.invokeMethod<bool>('executeInstallation', <String, String>{
-      'filePath': filePath
+      'filePath': newFilePath
     });
   }
 

@@ -355,6 +355,7 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCall
             final File downloadedFile = new File(destination);
             if (!downloadedFile.exists()) {
                 Log.e(TAG, "CRITICAL: File does not exist");
+                return false;
             }
             //AUTHORITY NEEDS TO BE THE SAME ALSO IN MANIFEST
             Uri apkUri = FileProvider.getUriForFile(context, androidProviderAuthority, downloadedFile);
@@ -369,7 +370,6 @@ public class OtaUpdatePlugin implements FlutterPlugin, ActivityAware, MethodCall
             intent.setDataAndType(fileUri, "application/vnd.android.package-archive");
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
-
         //SEND INSTALLING EVENT
         if (progressSink != null) {
             //NOTE: We have to start intent before sending event to stream
